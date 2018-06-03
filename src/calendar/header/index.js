@@ -4,7 +4,8 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import XDate from 'xdate';
 import PropTypes from 'prop-types';
 import styleConstructor from './style';
-import { weekDayNames } from '../../dateutils';
+import { weekDayNames, hebrewMonthAndYear } from '../../dateutils';
+import Hebcal from "hebcal";
 
 class CalendarHeader extends Component {
   static propTypes = {
@@ -123,7 +124,7 @@ class CalendarHeader extends Component {
           {leftArrow}
           <View style={{ flexDirection: 'row' }}>
             <Text allowFontScaling={false} style={this.style.monthText} accessibilityTraits='header'>
-                {this.props.hebrewCalendar ? this.props.month.toString('h') : this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
+                {this.props.hebrewCalendar ? hebrewMonthAndYear(this.props.month) : this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
             </Text>
             {indicator}
           </View>
