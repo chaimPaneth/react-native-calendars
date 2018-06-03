@@ -10,7 +10,7 @@ class CalendarHeader extends Component {
   static propTypes = {
     theme: PropTypes.object,
     hideArrows: PropTypes.bool,
-    month: PropTypes.instanceOf(XDate),
+    month: PropTypes.any,//instanceOf(XDate),
     addMonth: PropTypes.func,
     showIndicator: PropTypes.bool,
     firstDay: PropTypes.number,
@@ -18,7 +18,8 @@ class CalendarHeader extends Component {
     hideDayNames: PropTypes.bool,
     weekNumbers: PropTypes.bool,
     onPressArrowLeft: PropTypes.func,
-    onPressArrowRight: PropTypes.func
+    onPressArrowRight: PropTypes.func,
+    hebrewCalendar: PropTypes.bool
   };
 
   constructor(props) {
@@ -38,11 +39,18 @@ class CalendarHeader extends Component {
     this.props.addMonth(-1);
   }
 
+  isDiffMonth(thisMonth, nextMonth, nextProps) {
+    if (nextProps.hebrewCalendar) {
+      return (nextMonth.toString() !== thisMonth.toString());
+    } else {
+      return (nextMonth.toString('yyyy MM') !== thisMonth.toString('yyyy MM'));
+    }
+
+    return false;
+  }
+
   shouldComponentUpdate(nextProps) {
-    if (
-      nextProps.month.toString('yyyy MM') !==
-      this.props.month.toString('yyyy MM')
-    ) {
+    if (this.isDiffMonth(this.props.month, nextProps.month, nextProps)) {
       return true;
     }
     if (nextProps.showIndicator !== this.props.showIndicator) {
@@ -57,17 +65,17 @@ class CalendarHeader extends Component {
   onPressLeft() {
     const {onPressArrowLeft} = this.props;
     if(typeof onPressArrowLeft === 'function') {
-      return onPressArrowLeft(this.substractMonth);
+      return onPressArrowLeft(this.addMonth);
     }
-    return this.substractMonth();
+    return this.addMonth();
   }
 
   onPressRight() {
     const {onPressArrowRight} = this.props;
     if(typeof onPressArrowRight === 'function') {
-      return onPressArrowRight(this.addMonth);
+      return onPressArrowRight(this.substractMonth);
     }
-    return this.addMonth();
+    return this.substractMonth();
   }
 
   render() {
@@ -108,13 +116,14 @@ class CalendarHeader extends Component {
     if (this.props.showIndicator) {
       indicator = <ActivityIndicator />;
     }
+    let weekDayNamesProp = this.props.weekDayNames ? this.props.weekDayNames : weekDaysNames;
     return (
       <View>
         <View style={this.style.header}>
           {leftArrow}
           <View style={{ flexDirection: 'row' }}>
             <Text allowFontScaling={false} style={this.style.monthText} accessibilityTraits='header'>
-              {this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
+                {this.props.hebrewCalendar ? this.props.month.toString('h') : this.props.month.toString(this.props.monthFormat ? this.props.monthFormat : 'MMMM yyyy')}
             </Text>
             {indicator}
           </View>
@@ -124,7 +133,7 @@ class CalendarHeader extends Component {
           !this.props.hideDayNames &&
           <View style={this.style.week}>
             {this.props.weekNumbers && <Text allowFontScaling={false} style={this.style.dayHeader}></Text>}
-            {weekDaysNames.map((day, idx) => (
+            {weekDayNamesProp.map((day, idx) => (
               <Text allowFontScaling={false} key={idx} accessible={false} style={this.style.dayHeader} numberOfLines={1} importantForAccessibility='no'>{day}</Text>
             ))}
           </View>
