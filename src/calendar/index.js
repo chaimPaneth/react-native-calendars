@@ -6,8 +6,9 @@ import {
 import PropTypes from 'prop-types';
 
 import XDate from 'xdate';
+import Hebcal from 'hebcal'
 import dateutils from '../dateutils';
-import {xdateToData, parseDate} from '../interface';
+import {dateToData, parseDate} from '../interface';
 import styleConstructor from './style';
 import Day from './day/basic';
 import UnitDay from './day/period';
@@ -16,6 +17,7 @@ import MultiPeriodDay from './day/multi-period';
 import SingleDay from './day/custom';
 import CalendarHeader from './header';
 import shouldComponentUpdate from './updater';
+import _ from 'lodash';
 
 //Fallback when RN version is < 0.44
 const viewPropTypes = ViewPropTypes || View.propTypes;
@@ -75,7 +77,9 @@ class Calendar extends Component {
     // Handler which gets executed when press arrow icon left. It receive a callback can go back month
     onPressArrowLeft: PropTypes.func,
     // Handler which gets executed when press arrow icon left. It receive a callback can go next month
-    onPressArrowRight: PropTypes.func
+    onPressArrowRight: PropTypes.func,
+    // Bool to use Hebrew calendar rather then Gregorian
+    hebrewCalendar: PropTypes.bool
   };
 
   constructor(props) {
@@ -83,9 +87,9 @@ class Calendar extends Component {
     this.style = styleConstructor(this.props.theme);
     let currentMonth;
     if (props.current) {
-      currentMonth = parseDate(props.current);
+      currentMonth = parseDate(props.current, props.hebrewCalendar);
     } else {
-      currentMonth = XDate();
+      currentMonth = props.hebrewCalendar ? Hebcal.HDate() : XDate();
     }
     this.state = {
       currentMonth
@@ -99,44 +103,65 @@ class Calendar extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const current= parseDate(nextProps.current);
-    if (current && current.toString('yyyy MM') !== this.state.currentMonth.toString('yyyy MM')) {
+    const current = parseDate(nextProps.current, nextProps.hebrewCalendar);
+    if (this.isDiffCurrent(current, nextProps)) {
       this.setState({
-        currentMonth: current.clone()
+        currentMonth: nextProps.hebrewCalendar ? _.cloneDeep(current) : current.clone()
       });
     }
   }
 
+  isDiffCurrent(current, nextProps) {
+    if (nextProps.hebrewCalendar) {
+      return (current && current.toString() !== this.state.currentMonth.toString());
+    } else {
+      return (current && current.toString('yyyy MM') !== this.state.currentMonth.toString('yyyy MM'));
+    }
+
+    return false;
+  }
+
+  isDayCurrentMonth(day) {
+    if (this.props.hebrewCalendar) {
+      return (dateutils.hDateToMonthYear(day) === dateutils.hDateToMonthYear(this.state.currentMonth));
+    } else {
+      return (day.toString('yyyy MM') === this.state.currentMonth.toString('yyyy MM'));
+    }
+
+    return false;
+  }
+
   updateMonth(day, doNotTriggerListeners) {
-    if (day.toString('yyyy MM') === this.state.currentMonth.toString('yyyy MM')) {
+    if (this.isDayCurrentMonth(day)) {
       return;
     }
+    var cloned = this.props.hebrewCalendar ? _.cloneDeep(day) : day.clone();
     this.setState({
-      currentMonth: day.clone()
+      currentMonth: cloned,
     }, () => {
       if (!doNotTriggerListeners) {
-        const currMont = this.state.currentMonth.clone();
+        const currMont = this.props.hebrewCalendar ? _.cloneDeep(this.state.currentMonth) : this.state.currentMonth.clone();
         if (this.props.onMonthChange) {
-          this.props.onMonthChange(xdateToData(currMont));
+          this.props.onMonthChange(dateToData(currMont, this.props.hebrewCalendar));
         }
         if (this.props.onVisibleMonthsChange) {
-          this.props.onVisibleMonthsChange([xdateToData(currMont)]);
+          this.props.onVisibleMonthsChange([dateToData(currMont, this.props.hebrewCalendar)]);
         }
       }
     });
   }
 
   _handleDayInteraction(date, interaction) {
-    const day = parseDate(date);
-    const minDate = parseDate(this.props.minDate);
-    const maxDate = parseDate(this.props.maxDate);
-    if (!(minDate && !dateutils.isGTE(day, minDate)) && !(maxDate && !dateutils.isLTE(day, maxDate))) {
+    const day = parseDate(date, this.props.hebrewCalendar);
+    const minDate = parseDate(this.props.minDate, this.props.hebrewCalendar);
+    const maxDate = parseDate(this.props.maxDate, this.props.hebrewCalendar);
+    if (!(minDate && !dateutils.isGTE(day, minDate, this.props.hebrewCalendar)) && !(maxDate && !dateutils.isLTE(day, maxDate, this.props.hebrewCalendar))) {
       const shouldUpdateMonth = this.props.disableMonthChange === undefined || !this.props.disableMonthChange;
       if (shouldUpdateMonth) {
         this.updateMonth(day);
       }
       if (interaction) {
-        interaction(xdateToData(day));
+        interaction(dateToData(day, this.props.hebrewCalendar));
       }
     }
   }
@@ -150,24 +175,24 @@ class Calendar extends Component {
   }
 
   addMonth(count) {
-    this.updateMonth(this.state.currentMonth.clone().addMonths(count, true));
+    this.updateMonth(this.props.hebrewCalendar ? Hebcal.HDate(new Date(parseDate(this.state.currentMonth.greg(), false).clone().addMonths(count, true).getTime())) : this.state.currentMonth.clone().addMonths(count, true));
   }
 
   renderDay(day, id) {
-    const minDate = parseDate(this.props.minDate);
-    const maxDate = parseDate(this.props.maxDate);
+    const minDate = parseDate(this.props.minDate, this.props.hebrewCalendar);
+    const maxDate = parseDate(this.props.maxDate, this.props.hebrewCalendar);
     let state = '';
     if (this.props.disabledByDefault) {
       state = 'disabled';
-    } else if ((minDate && !dateutils.isGTE(day, minDate)) || (maxDate && !dateutils.isLTE(day, maxDate))) {
+    } else if ((minDate && !dateutils.isGTE(day, minDate, this.props.hebrewCalendar)) || (maxDate && !dateutils.isLTE(day, maxDate, this.props.hebrewCalendar))) {
       state = 'disabled';
-    } else if (!dateutils.sameMonth(day, this.state.currentMonth)) {
+    } else if (!dateutils.sameMonth(day, this.state.currentMonth, this.props.hebrewCalendar)) {
       state = 'disabled';
-    } else if (dateutils.sameDate(day, XDate())) {
+    } else if (dateutils.sameDate(day, XDate(), this.props.hebrewCalendar)) {
       state = 'today';
     }
     let dayComp;
-    if (!dateutils.sameMonth(day, this.state.currentMonth) && this.props.hideExtraDays) {
+    if ((!dateutils.sameMonth(day, this.state.currentMonth, this.props.hebrewCalendar)) && this.props.hideExtraDays) {
       if (['period', 'multi-period'].includes(this.props.markingType)) {
         dayComp = (<View key={id} style={{flex: 1}}/>);
       } else {
@@ -175,7 +200,7 @@ class Calendar extends Component {
       }
     } else {
       const DayComp = this.getDayComponent();
-      const date = day.getDate();
+      const date = this.props.hebrewCalendar ? Hebcal.gematriya(day.getDate()) : day.getDate();
       dayComp = (
         <DayComp
           key={id}
@@ -183,7 +208,7 @@ class Calendar extends Component {
           theme={this.props.theme}
           onPress={this.pressDay}
           onLongPress={this.longPressDay}
-          date={xdateToData(day)}
+          date={dateToData(day, this.props.hebrewCalendar)}
           marking={this.getDateMarking(day)}
         >
           {date}
@@ -216,7 +241,8 @@ class Calendar extends Component {
     if (!this.props.markedDates) {
       return false;
     }
-    const dates = this.props.markedDates[day.toString('yyyy-MM-dd')] || EmptyArray;
+    var key = this.props.hebrewCalendar ? dateutils.gregToYearMonthDay(day.greg()) : day.toString('yyyy-MM-dd');
+    const dates = this.props.markedDates[key] || EmptyArray;
     if (dates.length || dates) {
       return dates;
     } else {
@@ -241,16 +267,24 @@ class Calendar extends Component {
     return (<View style={this.style.week} key={id}>{week}</View>);
   }
 
+  lastMonthOfDay(current) {
+    if (!this.props.hebrewCalendar) {
+      return current.clone().addMonths(1, true).setDate(1).addDays(-1).toString('yyyy-MM-dd');
+    } else {
+      return parseDate(current.greg(), false).clone().addMonths(1, true).setDate(1).addDays(-1).toString('yyyy-MM-dd');
+    }
+  }
+
   render() {
-    const days = dateutils.page(this.state.currentMonth, this.props.firstDay);
+    const days = this.props.hebrewCalendar ? dateutils.hpage(this.state.currentMonth, this.props.firstDay) : dateutils.page(this.state.currentMonth, this.props.firstDay);
     const weeks = [];
     while (days.length) {
       weeks.push(this.renderWeek(days.splice(0, 7), weeks.length));
     }
     let indicator;
-    const current = parseDate(this.props.current);
+    const current = parseDate(this.props.current, this.props.hebrewCalendar);
     if (current) {
-      const lastMonthOfDay = current.clone().addMonths(1, true).setDate(1).addDays(-1).toString('yyyy-MM-dd');
+      const lastMonthOfDay = this.lastMonthOfDay(current);
       if (this.props.displayLoadingIndicator &&
           !(this.props.markedDates && this.props.markedDates[lastMonthOfDay])) {
         indicator = true;
@@ -259,6 +293,8 @@ class Calendar extends Component {
     return (
       <View style={[this.style.container, this.props.style]}>
         <CalendarHeader
+          hebrewCalendar={this.props.hebrewCalendar}
+          weekDayNames={this.props.weekDayNames}
           theme={this.props.theme}
           hideArrows={this.props.hideArrows}
           month={this.state.currentMonth}
