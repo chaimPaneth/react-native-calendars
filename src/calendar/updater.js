@@ -1,9 +1,10 @@
 import {parseDate} from '../interface';
 
 export default function shouldComponentUpdate(nextProps, nextState) {
+  const hebrewCalendar = nextProps.hebrewCalendar;
   let shouldUpdate = (nextProps.selected || []).reduce((prev, next, i) => {
     const currentSelected = (this.props.selected || [])[i];
-    if (!currentSelected || !next || parseDate(currentSelected).getTime() !== parseDate(next).getTime()) {
+    if (!currentSelected || !next || (!hebrewCalendar && parseDate(currentSelected).getTime() !== parseDate(next).getTime()) || (hebrewCalendar && parseDate(currentSelected).greg().getTime() !== parseDate(next).greg().getTime())) {
       return {
         update: true,
         field: 'selected'
@@ -23,12 +24,12 @@ export default function shouldComponentUpdate(nextProps, nextState) {
   }, shouldUpdate);
 
   shouldUpdate = ['minDate', 'maxDate', 'current'].reduce((prev, next) => {
-    const prevDate = parseDate(this.props[next]);
-    const nextDate = parseDate(nextProps[next]);
+    const prevDate = parseDate(this.props[next], hebrewCalendar);
+    const nextDate = parseDate(nextProps[next], hebrewCalendar);
     if (prev.update) {
       return prev;
     } else if (prevDate !== nextDate) {
-      if (prevDate && nextDate && prevDate.getTime() === nextDate.getTime()) {
+      if (prevDate && nextDate && (!hebrewCalendar && (prevDate.getTime() === nextDate.getTime())) || (hebrewCalendar && (prevDate.greg().getTime() === nextDate.greg().getTime()))) {
         return prev;
       } else {
         return {
