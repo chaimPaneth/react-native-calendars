@@ -203,17 +203,14 @@ function gregToYearMonthDay(date) {
 module.exports = {
   weekDayNames,
   sameMonth,
-  sameHMonth,
   sameDate,
-  sameHDate,
   month,
   page,
   fromTo,
+  hfromTo,
   isLTE,
   isGTE,
   hDateToMonthYear,
   gregToYearMonthDay,
-  addHDateMonths,
-  addHDateDays,
   hpage
 };
