@@ -200,6 +200,10 @@ function gregToYearMonthDay(date) {
   return [date.getFullYear(), (mm>9 ? '' : '0') + mm, (dd>9 ? '' : '0') + dd].join('-');
 }
 
+function hebrewMonthAndYear(d) {
+  return d.getMonthName('h') + " " + Hebcal.gematriya(d.year);
+}
+
 module.exports = {
   weekDayNames,
   sameMonth,
@@ -212,5 +216,6 @@ module.exports = {
   isGTE,
   hDateToMonthYear,
   gregToYearMonthDay,
-  hpage
+  hpage,
+  hebrewMonthAndYear
 };
