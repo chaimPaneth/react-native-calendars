@@ -79,7 +79,9 @@ class Calendar extends Component {
     // Handler which gets executed when press arrow icon left. It receive a callback can go next month
     onPressArrowRight: PropTypes.func,
     // Bool to use Hebrew calendar rather then Gregorian
-    hebrewCalendar: PropTypes.bool
+    hebrewCalendar: PropTypes.bool,
+    // Array of alternative weekday names
+    weekDayNames: PropTypes.any
   };
 
   constructor(props) {
