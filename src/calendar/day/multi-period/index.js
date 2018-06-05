@@ -15,6 +15,7 @@ class Day extends Component {
     marking: PropTypes.any,
     onPress: PropTypes.func,
     date: PropTypes.object,
+    hebrewCalendar: PropTypes.bool,
   };
 
   constructor(props) {
@@ -29,6 +30,22 @@ class Day extends Component {
 
   shouldComponentUpdate(nextProps) {
     return shouldUpdate(this.props, nextProps, ['state', 'children', 'marking', 'onPress', 'onLongPress']);
+  }
+
+  leftStyle() {
+    return {
+        borderTopLeftRadius: 2,
+        borderBottomLeftRadius: 2,
+        marginLeft: 4,
+    }
+  }
+
+  rightStyle() {
+    return {
+        borderTopRightRadius: 2,
+        borderBottomRightRadius: 2,
+        marginRight: 4,
+    }
   }
 
   renderPeriods(marking) {
@@ -48,18 +65,10 @@ class Day extends Component {
           },
         ];
         if (period.startingDay) {
-          style.push({
-            borderTopLeftRadius: 2,
-            borderBottomLeftRadius: 2,
-            marginLeft: 4,
-          });
+          style.push(this.props.hebrewCalendar ? this.rightStyle() : this.leftStyle());
         }
         if (period.endingDay) {
-          style.push({
-            borderTopRightRadius: 2,
-            borderBottomRightRadius: 2,
-            marginRight: 4,
-          });
+            style.push(this.props.hebrewCalendar ? this.leftStyle() : this.rightStyle());
         }
         return <View key={index} style={style} />;
       });
