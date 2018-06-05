@@ -79,9 +79,7 @@ class Calendar extends Component {
     // Handler which gets executed when press arrow icon left. It receive a callback can go next month
     onPressArrowRight: PropTypes.func,
     // Bool to use Hebrew calendar rather then Gregorian
-    hebrewCalendar: PropTypes.bool,
-    // Array of alternative weekday names
-    weekDayNames: PropTypes.any
+    hebrewCalendar: PropTypes.bool
   };
 
   constructor(props) {
@@ -212,6 +210,7 @@ class Calendar extends Component {
           onLongPress={this.longPressDay}
           date={dateToData(day, this.props.hebrewCalendar)}
           marking={this.getDateMarking(day)}
+          hebrewCalendar={this.props.hebrewCalendar}
         >
           {date}
         </DayComp>
