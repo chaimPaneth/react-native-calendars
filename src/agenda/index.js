@@ -319,7 +319,8 @@ export default class AgendaView extends Component {
 
   render() {
     const agendaHeight = Math.max(0, this.viewHeight - HEADER_HEIGHT);
-    const weekDaysNames = dateutils.weekDayNames(this.props.firstDay);
+    const weekDaysNames =
+      this.props.weekDayNames || dateutils.weekDayNames(this.props.firstDay);
     const weekdaysStyle = [
       this.styles.weekdays,
       {
@@ -439,10 +440,10 @@ export default class AgendaView extends Component {
           {knob}
         </Animated.View>
         <Animated.View style={weekdaysStyle}>
-          {weekDaysNames.map(day => (
+          {weekDaysNames.map((day, idx) => (
             <Text
               allowFontScaling={false}
-              key={day}
+              key={idx}
               style={this.styles.weekday}
               numberOfLines={1}
             >
