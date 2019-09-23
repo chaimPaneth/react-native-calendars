@@ -70,6 +70,9 @@ class Day extends Component {
         if (period.endingDay) {
             style.push(this.props.hebrewCalendar ? this.leftStyle() : this.rightStyle());
         }
+        if (period.halfLine && period.afterSunset !== null) {
+            style.push(period.afterSunset ? { width: 15, alignSelf: 'flex-end'}  : { width: 15 });
+        }
         return <View key={index} style={style} />;
       });
     }
