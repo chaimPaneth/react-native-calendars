@@ -21,7 +21,7 @@
     "lodash.isequal": "^4.5.0",
     "prop-types": "^15.5.10",
     "xdate": "^0.8.0",
-    "hebcal": "2.2.6",
+    "hebcal": "^2.2.6",
     "lodash": "^4.17.10"
   },
   "devDependencies": {
